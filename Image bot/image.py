@@ -8,8 +8,6 @@ FILE = "data/data-juli.csv"
 MONTH = "JULI"
 MONTH2 = ".07.2015"
 STDTID = "11:00"
-MAL = "Image bot/MAL.jpg"
-FONT = "Image bot/Lato-reg.ttf"
 COLOR = (51,204,51) # dark green
 # X and Y cordinates for text
 X = 300
@@ -18,7 +16,7 @@ Y = 390
 #gudstjenester = [{'tekst': 'Gudstjeneste Tom Olaf Josephsen/Jan Rosenvinge ', 'tid1': '11:00', 'dato': '05.07.2015', 'tittel': 'Gudstjeneste i Teie kirke', 'tid2': '12:00'},{'tekst': '?? Konsert ', 'tid1': '11:00', 'dato': '07.07.2015', 'tittel': 'Gudstjeneste i Teie kirke', 'tid2': '12:00'},{'tekst': '19.30:  Aftensang (Ferge kl.19.05) Maia Koren/Wenche Henriksen ', 'tid1': '19:30', 'dato': '09.07.2015', 'tittel': 'Gudstjeneste i Teie kirke', 'tid2': '20:30'}]
 
 # get an image
-base = Image.open(MAL).convert('RGBA')
+base = Image.open('MAL.jpg').convert('RGBA')
 
 # make a blank image for the text, initialized to transparent text color
 txt = Image.new('RGBA', base.size, (0,0,0,0))
@@ -42,8 +40,8 @@ if __name__ == "__main__":
                 break
         
     # get a font
-    fnt1 = ImageFont.truetype(FONT, 60)
-    fnt2 = ImageFont.truetype(FONT, 40)
+    fnt1 = ImageFont.truetype('Lato-reg.ttf', 60)
+    fnt2 = ImageFont.truetype('Lato-reg.ttf', 40)
     # get a drawing context
     d = ImageDraw.Draw(txt)
 
