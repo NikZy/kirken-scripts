@@ -13,14 +13,13 @@
 import CSVscraper
 import mechanize
 import sys
+import getopt
 
 # VARIABLER
 MONTH = ".08.2015"
 STDTID = "11:00"
-FILE = "data/data-august.csv"
-
-#get data from csv file.
-gudstjenester = CSVscraper.parseCsv(FILE, MONTH, STDTID)
+FILE = ""#data/data-august.csv"
+LOGIN= ""
 
 #List of added events
 name = []
@@ -31,7 +30,51 @@ br = mechanize.Browser()
 site = br.open("http://www.kirken.notteroy.no/index.phtml?pid=2742")
 br._factory.is_html = True # Må ha med dette
 
+def show_usage():
+        print "\nusage: arg.py -m <month.year> -f <datafile (csv file)> -l <'username & password'>"
+        print "example: arg.py -m 08.2015 -f filename.csv -l 'user pw'"
+        sys.exit()
+
+def check_usage(argv):
+        if len(argv) != 6:
+                show_usage()
+
+        try:
+                opts, args = getopt.getopt(argv, "hm:l:f:", ["month=", "login=", "file"])
+        except getopt.GetoptError:
+                show_usage()
+
+        for opt, arg in opts:
+                if opt == "-h":
+                        show_usage()
+                elif opt in ("-m", "--month"):
+                        arg2 = arg.split(".") # check that arg is xx.xxxx
+                        if arg2[0].isdigit() and arg2[1].isdigit() and len(arg2[0]) == 2 and len(arg2[1]) == 4:
+                                global MONTH
+                                MONTH = "." + arg
+                        else:
+                                show_usage()
+                elif opt in ("-f", "--datafile"):
+                        global FILE
+                        FILE = arg
+                elif opt in ("-l", "--login"):
+                        global LOGIN
+                        LOGIN = arg.split(" ")
+        return True
+
 def main(argv):
+        #get data from csv file.
+        print "collects data from", FILE
+        print "Month = ", MONTH
+
+        gudstjenester = CSVscraper.parseCsv(FILE, MONTH, STDTID)
+        #be bruker om å se etter errors
+        for g in gudstjenester:
+                print ""
+                for i in g:
+                        print g[i]
+        raw_input ("CHECK FOR ERRORS -> PRESS A BUTTON")
+
         logIn()
         
         enterLink()
@@ -46,7 +89,7 @@ def main(argv):
                     
         return 0
 def logIn ():
-        print "Logging inn..\n"
+        print "Logging inn.. (if this fails you have wrong LOGIN details\n"
         # Print all forms on page
         #for form in br.forms():
         #        print form
@@ -54,13 +97,17 @@ def logIn ():
         # Select "login" form
         username = br.form = list(br.forms())[0]
  
-        br.form["username"] = "pybot"
-        br.form["password"] = "kalender"
+        br.form["username"] = LOGIN[0]
+        br.form["password"] = LOGIN[1]
 
-        br.submit()
-        
+        try:
+                br.submit()
+                
+        except IndexError:
+                print "WRONG LOGIN"
+                sys.quit()
 def enterLink ():
-        # Go to "kalender"
+        print  "Go to kalender"
         site = br.open("http://www.kirken.notteroy.no/index.phtml?pid=59")
         
         #site = br.response()
@@ -75,7 +122,9 @@ def fillForm(form, gudstjenester):
         br._factory.is_html = True # Må ha med dette
 
         count = 0
-        
+        #log file
+        log = open("log.txt", "w")
+        log.write("Forms submitted:\n")
         for g in gudstjenester:
                 if count == 9:
                         
@@ -102,13 +151,21 @@ def fillForm(form, gudstjenester):
                 name.append(g["tittel"])
                 date.append(g["dato"])
                 
+                #write to log.txt
+                log.write("\n-------------\n")
+                log.write(g["tittel"])
+                log.write(g["dato"])
+                log.write(g["tid1"])
+                log.write(g["tekst"])
+                log.write("\n-------------\n")
                 count+= 1
         
         br.submit()
-        print "submited ALL"
-        
-        
-        
+        print "n submitted = ", count
+        print "submited ALL + check log.txt"
+        # close log file
+        log.close()
         
 if __name__ == "__main__":
-        main(sys.argv)
+        check_usage(sys.argv[1:])
+        main(sys.argv[1:])

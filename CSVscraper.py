@@ -1,7 +1,38 @@
 # -*- coding: iso-8859-1 -*-
-import csv
+import csv, sys, getopt
 
+# VARIABLER
+MONTH = ".08.2015"
+STDTID = "11:00"
+FILE = "data/data-august.csv"
+def show_usage():
+    print "\nusage: CSV.scraper.py -m <month.year> -f <file> "
+    print "example: arg.py -m 08.2015 -f data.csv"
+    sys.exit()
 
+def check_usage(argv):
+    if len(argv) < 1:
+                show_usage()
+
+    try:
+            opts, args = getopt.getopt(argv, "hm:f:", ["month=", "file="])
+    except getopt.GetoptError:
+            show_usage()
+
+    for opt, arg in opts:
+            if opt == "-h":
+                    show_usage()
+            elif opt in ("-m", "--month"):
+                arg2 = arg.split(".") # check that arg is xx.xxxx
+                if arg2[0].isdigit() and arg2[1].isdigit() and len(arg2[0]) == 2 and len(arg2[1]) == 4:
+                        global MONTH
+                        MONTH = "." + arg
+                else:
+                        show_usage()
+            elif opt in ("-f", "--file"):
+                global FILE
+                FILE = arg
+    return True
 
 def parseCsv(FILE, MONTH, STDTID):
 
@@ -318,13 +349,10 @@ def tidspunktParse (tekst):
         return retur
     return False
 
+
 if __name__ == "__main__":
-    
-    # VARIABLER
-    MONTH = ".08.2015"
-    STDTID = "11:00"
-    FILE = "data/data-august.csv"
-    
+
+    check_usage(sys.argv[1:])
     gudstjenester = parseCsv(FILE, MONTH, STDTID)
     for g in gudstjenester:
         print g
