@@ -80,14 +80,6 @@ def parseCsv(FILE, MONTH, STDTID):
             if rows[i][1] != '""' and rows[i][1] != 'DATO ': #Hvis det er en dato
 
                 # fikser lese error. Tar bort prekentekst hvis neste linj eikke er dato.
-                #s = 1
-
-                #if rows.index(rows[i+s]) < len(rows) -1:
-                #    while rows[i+s][1] != rows[i+s][1].strip().isdigit():
-                    #    print rows[i+s][1]
-                 #       rows[i+s][1] = '""'
-                 #       s = s + 1
-
                 #Nøtterøy
                 if rows[i][3] != '""':
 
@@ -309,13 +301,19 @@ def initialerParse (tekst):
                  "Sonja": "Sonja Thorsnes",
                  "Kristine": "Kristine Amundsen"
                  }
-    
     for i, value in dict.items(initialer):
         if i in tekst and i != "Kristin" and 1 != "Kristine":
+            # TODO: 
+            # t = "sindre fredrik"
+            #t[:t.index("fredrik")] + " Ole " + t[t.index("fredrik"):] 
+            #'sindre  Ole fredrik'
+            if tekst[tekst.index(i) - 1] != "/":
+                tekst = tekst[:tekst.index(i)] + "\nMedvirkende:" + tekst[tekst.index(i):]
+            #tekst.index(value)
             tekst = tekst.replace(i, value)
             
         #Passer på at den ikke bytter ut Kristine med Kristin 
-        elif i == "Kristin" and "Kristine" in tekst == False:
+        elif i == "Kristin" and "Kristine" not in tekst:
             tekst = tekst.replace(i, value)
         elif i == "Kristine":
             tekst = tekst.replace(i, value)
