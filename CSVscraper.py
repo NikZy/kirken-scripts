@@ -175,7 +175,8 @@ def initialerParse (tekst):
                  "Wenche": "Wenche Henriksen",
                  "Ellen": "Ellen Haga",
                  "Sonja": "Sonja Thorsnes",
-                 "Kristine": "Kristine Amundsen"
+                 "Kristine": "Kristine Amundsen",
+                 "Dag": "Dag Litleskare"
                  }
     for i, value in dict.items(initialer):
         if i in tekst and i != "Kristin" and 1 != "Kristine":
