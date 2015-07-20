@@ -35,7 +35,7 @@ def check_usage(argv):
     return True
 
 def parseCsv(FILE, MONTH, STDTID):
-
+    # Leser inn dataen i rows
     # Liste over dictionaries med gudstjenester.
     # Hvert element har i.text og i.dato
     gudstjenester = []
@@ -48,9 +48,10 @@ def parseCsv(FILE, MONTH, STDTID):
         for row in reader:
 
             count = count +1
+            # DETTE HAR BLITT LØST PÅ EN BEDRE MÅTE, SÅ linje 63
             # sletter del 1 av "PREKENTEKST" som gjør listen for lang
-            if len(row) > 14:
-                del row[2]
+            #if len(row) > 14:
+             #   del row[2]
 
             # if csv table error
             if len(row) < 7:
@@ -59,6 +60,12 @@ def parseCsv(FILE, MONTH, STDTID):
                 print" ______"
                 #del row[:]
 
+            # Fjerner komma i prekentekst som "fucker opp" listen
+            if len(row) > 14: #and "." in row[2]:
+                # legger sammen eks: "Luk.12" + 41-48
+                row[2] = row[2] + row[3]
+                # sletter "41-48" fordi den er i row[2]
+                del row[3]
 
             rows.append(row)
 
@@ -71,7 +78,6 @@ def parseCsv(FILE, MONTH, STDTID):
                         r[1] = '""'
 
 
-
     for i, val in enumerate(rows):
 
         # Fikser lese error. Hvis noe info mangler
@@ -81,206 +87,76 @@ def parseCsv(FILE, MONTH, STDTID):
 
                 # fikser lese error. Tar bort prekentekst hvis neste linj eikke er dato.
                 #Nøtterøy
-                if rows[i][3] != '""':
-
-                    text = rows[i][3].rstrip('""') # colonnen og raden der teksten er
-
-                    # legger til flere radene hvis teksten strekker seg over flere
-                    n = 1
-                    while rows[i+n][1] == '""':
-                        if rows[i+n][3] != '""':   
-                            text = text + rows[i+n][3]
-                        n = n + 1
-                    # Bytter ut forkortelser med fulle navn
-                    text = initialerParse(text)
-                    
-                    # TODO: LEGGE TIL TITTEL!
-                    tittel = "Gudstjeneste i Nøtterøy kirke"
-
-                    # Sjekker om det er oppgitt tidspunkt
-                    tid = tidspunktParse (rows[i][3])
-                    tid1 = ""
-                    tid2 = ""
-                    
-                    # det var ikke noe tid der
-                    if tid == False:
-                        tid1 = STDTID
-                        
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # det var ikke noe slutt tid der
-                    elif len(tid) < 2:
-                        tid1 = tid[0]
-                        # Slutttiden er tid1 + en time
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # der var slutt tid der
-                    elif len(tid) == 2:
-                        tid1 = tid[0]
-                        tid2 = tid[1]
-                    
-                    N = {"dato": rows[i][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
-                    gudstjenester.append(N)
+                getData(i, 3, rows, gudstjenester)
                    
 
                 #Teie
-                if rows[i][4] != '""':
-                    text = rows[i][4].rstrip('""')
-
-                    n = 1
-                    while rows[i+n][1] == '""':
-                        if rows[i+n][4] != '""':
-                            text = text + rows[i+n][4]
-                        n = n + 1
-
-                    text = initialerParse(text)
-                    tittel = "Gudstjeneste i Teie kirke"
-
-                      # Sjekker om det er oppgitt tidspunkt
-                    tid = tidspunktParse (rows[i][4])
-                    tid1 = ""
-                    tid2 = ""
-                    
-                    # det var ikke noe tid der
-                    if tid == False:
-                        tid1 = STDTID
-                        
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # det var ikke noe slutt tid der
-                    elif len(tid) < 2:
-                        tid1 = tid[0]
-                        # Slutttiden er tid1 + en time
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # der var slutt tid der
-                    elif len(tid) == 2:
-                        tid1 = tid[0]
-                        tid2 = tid[1]
-                    
-                    N = {"dato": rows[i][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
-                    gudstjenester.append(N)
+                getData(i, 4, rows, gudstjenester)
                 #Torød
-                if rows[i][5] != '""':
-                    text = rows[i][5].rstrip('""')
+                getData(i, 5, rows, gudstjenester)
 
-                    n = 1
-                    while rows[i+n][1] == '""':
-                        if rows[i+n][5] != '""':
-                            text = text + rows[i+n][5]
-                        n = n + 1
-                    text = initialerParse(text)
-                    tittel = "Gudstjeneste i Torød kirke"
-                    
-                     # Sjekker om det er oppgitt tidspunkt
-                    tid = tidspunktParse (rows[i][5])
-                    tid1 = ""
-                    tid2 = ""
-                    
-                    # det var ikke noe tid der
-                    if tid == False:
-                        tid1 = STDTID
-                        
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # det var ikke noe slutt tid der
-                    elif len(tid) < 2:
-                        tid1 = tid[0]
-                        # Slutttiden er tid1 + en time
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # der var slutt tid der
-                    elif len(tid) == 2:
-                        tid1 = tid[0]
-                        tid2 = tid[1]
-                    
-                    N = {"dato": rows[i][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
-                    gudstjenester.append(N)
-
-                if rows[i][6] != '""':  #Veierland
-                    text = rows[i][6].rstrip('""')
-
-                    n = 1
-                    while rows[i+n][1] == '""':
-                        if rows[i+n][6] != '""':
-                            text = text + rows[i+n][6]
-                        n = n + 1
-                    text = initialerParse(text)
-                    tittel = "Gudstjeneste i Veierland kirke"
-
-                     # Sjekker om det er oppgitt tidspunkt
-                    tid = tidspunktParse (rows[i][6])
-                    tid1 = ""
-                    tid2 = ""
-                    
-                    # det var ikke noe tid der
-                    if tid == False:
-                        tid1 = STDTID
-                        
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # det var ikke noe slutt tid der
-                    elif len(tid) < 2:
-                        tid1 = tid[0]
-                        # Slutttiden er tid1 + en time
-                        tid2 = int(tid1[:2])
-                        tid2 = tid2 + 1
-                        tid2 = str(tid2) + tid1[2:]
-                        
-                    # der var slutt tid der
-                    elif len(tid) == 2:
-                        tid1 = tid[0]
-                        tid2 = tid[1]
-                    
-                    N = {"dato": rows[i][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
-                    gudstjenester.append(N)
+                # Veierland
+                getData(i, 6, rows, gudstjenester)
     #print error
     return gudstjenester
 
-## BRUKES IKKE ENDA. SKAL TA OVER FOR NÅVÆRENDE,.#TODO: FULLFØRE DENNE
-def getData (kolonne):
-    # Henter dara fra gitt colonne
-    # returnerer dictinary
-    if kolonne != '""':
-        text = rows[i][3].rstrip('""') # colonnen og raden der teksten er
+## Henter dataen til gudstjenesten
+def getData (kolonne, rad, rows, gudstjenester):
+    # For å få riktig tittel
+    if rad == 3:
+        kirke = "Nøtterøy kirke"
+    elif rad == 4:
+        kirke = "Teie kirke"
+    elif rad == 5:
+        kirke = "Torød kirke"
+    elif rad == 6:
+        kirke = "Veierland kirke"
 
-         # legger til flere radene hvis teksten strekker seg over flere
+    # fikser lese error. Tar bort prekentekst hvis neste linj eikke er dato.
+    if rows[kolonne][rad] != '""':
+        text = rows[kolonne][rad].rstrip('""')
+
+        # Sjekker om g.tekst strekker seg over flere rader
+        # Hvis den gjør, så legg til denne teksten også
         n = 1
-        
-        while rows[i+n][1] == '""':
-            if rows[i+n][3] != '""':   
-                text = text + rows[i+n][3] + "\n"
+        while rows[kolonne+n][1] == '""':
+            if rows[kolonne+n][rad] != '""':
+                text = text + rows[kolonne+n][rad]
             n = n + 1
-            
         # Bytter ut forkortelser med fulle navn
         text = initialerParse(text)
-                    
-        # TODO: LEGGE TIL TITTEL!
-        tittel = "Gudstjeneste i Nøtterøy kirke"
-
-        # Legger til tidspunk
-        tid1 = tidspunktParse (rows[i][3])
-        if tid1 == False:
+        # Legger til tittel
+        tittel = "Gudstjeneste i " + kirke
+        
+        ## TODO! Fjerne alt med TID og putte det inn i tidspunktParse
+         # Sjekker om det er oppgitt tidspunkt
+        tid = tidspunktParse (rows[kolonne][rad])
+        tid1 = ""
+        tid2 = ""
+        
+        # det var ikke noe tid der
+        if tid == False:
             tid1 = STDTID
-
-        # Slutttiden er tid1 + en time
-        tid2 = int(tid1[:2])
-        tid2 = tid2 + 1
-        tid2 = str(tid2) + tid1[2:]
+            
+            tid2 = int(tid1[:2])
+            tid2 = tid2 + 1
+            tid2 = str(tid2) + tid1[2:]
+            
+        # det var ikke noe slutt tid der
+        elif len(tid) < 2:
+            tid1 = tid[0]
+            # Slutttiden er tid1 + en time
+            tid2 = int(tid1[:2])
+            tid2 = tid2 + 1
+            tid2 = str(tid2) + tid1[2:]
+            
+        # der var slutt tid der
+        elif len(tid) == 2:
+            tid1 = tid[0]
+            tid2 = tid[1]
+        
+        N = {"dato": rows[kolonne][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
+        gudstjenester.append(N)
     
 def initialerParse (tekst):
     n = 0
@@ -308,7 +184,7 @@ def initialerParse (tekst):
             #t[:t.index("fredrik")] + " Ole " + t[t.index("fredrik"):] 
             #'sindre  Ole fredrik'
             if tekst[tekst.index(i) - 1] != "/":
-                tekst = tekst[:tekst.index(i)] + "\nMedvirkende:" + tekst[tekst.index(i):]
+                tekst = tekst[:tekst.index(i)] + "\nMedvirkende: " + tekst[tekst.index(i):]
             #tekst.index(value)
             tekst = tekst.replace(i, value)
             
@@ -353,4 +229,9 @@ if __name__ == "__main__":
     check_usage(sys.argv[1:])
     gudstjenester = parseCsv(FILE, MONTH, STDTID)
     for g in gudstjenester:
-        print g
+        print "\n-------------\n"
+        print g["tittel"]
+        print g["dato"]
+        print g["tid1"]
+        print g["tekst"]
+        print "\n-------------\n"
