@@ -67,12 +67,13 @@ def main(argv):
         print "collects data from", FILE
         print "Month = ", MONTH
 
-        gudstjenester = CSVscraper.parseCsv(FILE, MONTH, STDTID)
+        hendelser = CSVscraper.parseCsv(FILE, MONTH, STDTID)
         #be bruker om å se etter errors
-        for g in gudstjenester:
-                print ""
-                for i in g:
-                        print g[i]
+        for h in hendelser:
+                for g in h:
+                        print ""
+                        for i in g:
+                                print g[i]
         raw_input ("CHECK FOR ERRORS -> PRESS A BUTTON")
 
         logIn()
@@ -80,7 +81,7 @@ def main(argv):
         enterLink()
         
         # Fill forms
-        fillForm(br.form, gudstjenester)
+        fillForm(br.form, hendelser)
 
         print "ALL ADDED EVENTS:"
         for i in range(len(name)):
@@ -117,7 +118,7 @@ def enterLink ():
         form = br.form = list(br.forms())[1]
         #print br.form
 
-def fillForm(form, gudstjenester):
+def fillForm(form, hendelser):
         print "Filling out forms...\n"
         br._factory.is_html = True # Må ha med dette
 
@@ -125,42 +126,59 @@ def fillForm(form, gudstjenester):
         #log file
         log = open("log.txt", "w")
         log.write("Forms submitted:\n")
-        for g in gudstjenester:
-                if count == 9:
+        # hendelser[["gudstjenester"], ["konsert"], ["annet"]
+        for h in hendelser:
+                for g in h:
+                        # Det går bare ann å legge inn 10 samtidig
+                        if count == 9:
+                                
+                                br.submit()
+                                print "submiting first 10..."
+                                enterLink()
+                                form = br.form = list(br.forms())[1]
+                                count = 0
+                                
+                        count = count % 10
                         
-                        br.submit()
-                        print "submiting first 10..."
-                        enterLink()
-                        form = br.form = list(br.forms())[1]
-                        count = 0
-                        
-                count = count % 10
-                
-                form["sdato_" + str(count)] = g["dato"]
-                form["start_" + str(count)] = g["tid1"]
-                form["slutt_" + str(count)] = g["tid2"]
-                form["emne_" + str(count)] = g["tittel"]
-                form["tekst_" + str(count)] = g["tekst"]
-                # Type event. 109 = gudstjeneste
-                form["kaltype"] = ["109"]
-                # Lesertilgang 0 = alle
-                form["lesegruppe"] = ["0"]
-                # Redigeringstilgang 1 = admin
-                form["skrivegruppe"] = ["1"]
+                        form["sdato_" + str(count)] = g["dato"]
+                        form["start_" + str(count)] = g["tid1"]
+                        form["slutt_" + str(count)] = g["tid2"]
+                        form["emne_" + str(count)] = g["tittel"]
+                        form["tekst_" + str(count)] = g["tekst"]
+                        # sjekke hvilket "type" vi er på atm
+                        if hendelser.index(h) == 0:
+                                # Type event. 109 = gudstjeneste
+                                form["kaltype"] = ["109"]
+                        elif hendelser.index(h) == 1:
+                                # 128 = konserter
+                                form["kaltype"] = ["128"]
+                        elif hendelser.index(h) == 2:
+                                # 129 = annet
+                                form["kaltype"] = ["129"]
 
-                name.append(g["tittel"])
-                date.append(g["dato"])
-                
-                #write to log.txt
-                log.write("\n-------------\n")
-                log.write(g["tittel"])
-                log.write(g["dato"])
-                log.write(g["tid1"])
-                log.write(g["tekst"])
-                log.write("\n-------------\n")
-                count+= 1
-        
-        br.submit()
+                        # Lesertilgang 0 = alle
+                        form["lesegruppe"] = ["0"]
+                        # Redigeringstilgang 1 = admin
+                        form["skrivegruppe"] = ["1"]
+
+                        name.append(g["tittel"])
+                        date.append(g["dato"])
+                        
+                        #write to log.txt
+                        log.write("\n-------------\n")
+                        log.write(g["tittel"])
+                        log.write(g["dato"])
+                        log.write(g["tid1"])
+                        log.write(g["tekst"])
+                        log.write("\n-------------\n")
+                        count+= 1
+                        
+                # Submit når en "type" hendelse er ferdig
+                print "ferdig med index: "+ str(hendelser.index(h))
+                count = 0
+                br.submit()
+                enterLink()
+                form = br.form = list(br.forms())[1]
         print "n submitted = ", count
         print "submited ALL + check log.txt"
         # close log file

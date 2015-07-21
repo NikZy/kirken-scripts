@@ -38,7 +38,10 @@ def parseCsv(FILE, MONTH, STDTID):
     # Leser inn dataen i rows
     # Liste over dictionaries med gudstjenester.
     # Hvert element har i.text og i.dato
-    gudstjenester = []
+    # hendelse[0] = gudstjeneste
+    # hendelse[1] = konsert
+    # hendelse[2] = annet
+    hendelser = [[], [], []]
     error = []
     rows = []
     count = 0
@@ -63,7 +66,7 @@ def parseCsv(FILE, MONTH, STDTID):
             # Fjerner komma i prekentekst som "fucker opp" listen
             if len(row) > 14: #and "." in row[2]:
                 # legger sammen eks: "Luk.12" + 41-48
-                row[2] = row[2] + row[3]
+                row[2] = row[2] +","+ row[3]
                 # sletter "41-48" fordi den er i row[2]
                 del row[3]
 
@@ -87,21 +90,22 @@ def parseCsv(FILE, MONTH, STDTID):
 
                 # fikser lese error. Tar bort prekentekst hvis neste linj eikke er dato.
                 #Nøtterøy
-                getData(i, 3, rows, gudstjenester)
+                getData(i, 3, rows, hendelser, MONTH)
                    
 
                 #Teie
-                getData(i, 4, rows, gudstjenester)
+                getData(i, 4, rows, hendelser, MONTH)
                 #Torød
-                getData(i, 5, rows, gudstjenester)
+                getData(i, 5, rows, hendelser, MONTH)
 
                 # Veierland
-                getData(i, 6, rows, gudstjenester)
+                getData(i, 6, rows, hendelser, MONTH)
     #print error
-    return gudstjenester
+    return hendelser
 
 ## Henter dataen til gudstjenesten
-def getData (kolonne, rad, rows, gudstjenester):
+def getData (kolonne, rad, rows, hendelser, MONTH):
+    ptekst = ""
     # For å få riktig tittel
     if rad == 3:
         kirke = "Nøtterøy kirke"
@@ -114,19 +118,45 @@ def getData (kolonne, rad, rows, gudstjenester):
 
     # fikser lese error. Tar bort prekentekst hvis neste linj eikke er dato.
     if rows[kolonne][rad] != '""':
-        text = rows[kolonne][rad].rstrip('""')
+        tekst = rows[kolonne][rad].rstrip('""')
 
         # Sjekker om g.tekst strekker seg over flere rader
         # Hvis den gjør, så legg til denne teksten også
         n = 1
         while rows[kolonne+n][1] == '""':
             if rows[kolonne+n][rad] != '""':
-                text = text + rows[kolonne+n][rad]
+                tekst = tekst + rows[kolonne+n][rad]
+
+            # Henter  prekentekst
+            if rows[kolonne +n-1][2] != '""':
+                ptekst = ptekst + rows[kolonne + n -1][2]
             n = n + 1
+
+        # Legger til ptekst til tekst
+        if ptekst != "":
+            tekst = tekst + "<br>Prekentekst: " + ptekst
         # Bytter ut forkortelser med fulle navn
-        text = initialerParse(text)
+        tekst = textParser(tekst)
+
+        # Typer hendelse det kan være
+        types = [
+            "Gudstjeneste",
+            "Konf.underv", 
+            "Skoleforestilling",
+            "Alpha-kurs",
+            "Sangsamling",
+            "Konsert"
+        ]
+        
+        for t in types:
+            if t in tekst or t.lower() in tekst:
+                type = t
+                break # hvis t funnet. stop loop
+            else:
+                type = "Hendelse"
+
         # Legger til tittel
-        tittel = "Gudstjeneste i " + kirke
+        tittel = type + " i " + kirke
         
         ## TODO! Fjerne alt med TID og putte det inn i tidspunktParse
          # Sjekker om det er oppgitt tidspunkt
@@ -155,11 +185,19 @@ def getData (kolonne, rad, rows, gudstjenester):
             tid1 = tid[0]
             tid2 = tid[1]
         
-        N = {"dato": rows[kolonne][1] + MONTH, "tekst": text, "tittel": tittel, "tid1": tid1, "tid2":tid2}
-        gudstjenester.append(N)
+        N = {"dato": rows[kolonne][1] + MONTH, "tekst": tekst, "tittel": tittel, "type": type, "tid1": tid1, "tid2":tid2}
+        if N["type"] == "Gudstjeneste":
+            hendelser[0].append(N)
+        elif N["type"] == "Konsert":
+            hendelser[1].append(N)
+        else: 
+            hendelser[2].append(N)
     
-def initialerParse (tekst):
+def textParser (tekst):
     n = 0
+    # Legger til . etter "Gudstjeneste"
+    if "Gudstjeneste" in tekst:
+        tekst = tekst[:tekst.index("Gudstjeneste")+12] + "." + tekst[tekst.index("Gudstjeneste")+12:]
     # Bytter ut forkortelser med fulle navn
     initialer = {"TOJ":"Tom Olaf Josephsen",
                  "IB": "Inger Bækken",
@@ -180,12 +218,23 @@ def initialerParse (tekst):
                  }
     for i, value in dict.items(initialer):
         if i in tekst and i != "Kristin" and 1 != "Kristine":
-            # TODO: 
+    
             # t = "sindre fredrik"
             #t[:t.index("fredrik")] + " Ole " + t[t.index("fredrik"):] 
             #'sindre  Ole fredrik'
-            if tekst[tekst.index(i) - 1] != "/":
-                tekst = tekst[:tekst.index(i)] + "\nMedvirkende: " + tekst[tekst.index(i):]
+
+            #-----------------------------------
+            # BUG: Ved tilfeller hvor det er flere mellomrom mellom
+            #      medvirkende så vil ikke "Medvirkende: " puttes 
+            #      på riktig plass eks:
+            #      Gudstjeneste Barnekantoriet Karl Olav Skilbreid/Kristin Vold Nese/ 
+            #      Medvirkende: Jan Rosenvinge 
+
+
+            #-------------------------------
+            # Legger til "Medvirkende: "
+            if tekst[tekst.index(i) - 1] != "/" and "\n<br>Medvirkende" not in tekst:
+                tekst = tekst[:tekst.index(i)] + "\n<br>Medvirkende: " + tekst[tekst.index(i):]
             #tekst.index(value)
             tekst = tekst.replace(i, value)
             
@@ -228,11 +277,13 @@ def tidspunktParse (tekst):
 if __name__ == "__main__":
 
     check_usage(sys.argv[1:])
-    gudstjenester = parseCsv(FILE, MONTH, STDTID)
-    for g in gudstjenester:
-        print "\n-------------\n"
-        print g["tittel"]
-        print g["dato"]
-        print g["tid1"]
-        print g["tekst"]
-        print "\n-------------\n"
+    hendelser = parseCsv(FILE, MONTH, STDTID)
+    for t in hendelser:
+        for h in t:
+            print "\n-------------\n"
+            print h["tittel"]
+            print h["type"]
+            print h["dato"]
+            print h["tid1"]
+            print h["tekst"]
+            print "\n-------------\n"
