@@ -14,6 +14,7 @@ import CSVscraper
 import mechanize
 import sys
 import getopt
+import os
 
 # VARIABLER
 MONTH = ".08.2015"
@@ -68,13 +69,50 @@ def main(argv):
         print "Month = ", MONTH
 
         hendelser = CSVscraper.parseCsv(FILE, MONTH, STDTID)
+
         #be bruker om å se etter errors
         for h in hendelser:
                 for g in h:
                         print ""
-                        for i in g:
-                                print g[i]
-        raw_input ("CHECK FOR ERRORS -> PRESS A BUTTON")
+                        print g["dato"]
+                        print g["tittel"]
+                        print g["tekst"]
+                        print g["type"]
+                        print g["tid1"]
+
+        key = ""             
+        while key != "y" and key != "n":
+                key = raw_input ("CHECK FOR ERRORS \n want to make changes? (Y/N): ")
+        
+        if key == "y":
+                f = open("temp.txt", "w")
+                for e in hendelser:
+                        for g in e:
+                                f.write(g["tekst"]+"\n")
+                f.close()
+                key = raw_input("\nMAKE CHANGES IN 'tempt.txt' and press enter when complete")
+                
+                f = open("temp.txt", "r")
+
+                for h in hendelser:
+                        for g in h:
+                                l = f.readline()
+                                g["tekst"] = l.rstrip("\n")
+                f.close()
+                os.remove("temp.txt")
+                #be bruker om å se etter errors
+                for h in hendelser:
+                        for g in h:
+                                print ""
+                                print g["dato"]
+                                print g["tittel"]
+                                print g["tekst"]
+                                print g["type"]
+                                print g["tid1"]
+                        
+                key = raw_input ("\nCHECK FOR ERRORS 1 LAST TIME. Press 'ENTER' when rdy ")
+
+
 
         logIn()
         

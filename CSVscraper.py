@@ -51,10 +51,6 @@ def parseCsv(FILE, MONTH, STDTID):
         for row in reader:
 
             count = count +1
-            # DETTE HAR BLITT LØST PÅ EN BEDRE MÅTE, SÅ linje 63
-            # sletter del 1 av "PREKENTEKST" som gjør listen for lang
-            #if len(row) > 14:
-             #   del row[2]
 
             # if csv table error
             if len(row) < 7:
@@ -233,8 +229,8 @@ def textParser (tekst):
 
             #-------------------------------
             # Legger til "Medvirkende: "
-            if tekst[tekst.index(i) - 1] != "/" and "\n<br>Medvirkende" not in tekst:
-                tekst = tekst[:tekst.index(i)] + "\n<br>Medvirkende: " + tekst[tekst.index(i):]
+            if tekst[tekst.index(i) - 1] != "/" and "<br>Medvirkende" not in tekst:
+                tekst = tekst[:tekst.index(i)] + "<br>Medvirkende: " + tekst[tekst.index(i):]
             #tekst.index(value)
             tekst = tekst.replace(i, value)
             
