@@ -57,7 +57,6 @@ def parseCsv(FILE, MONTH, STDTID):
                 error.append(row)
                 print "ERROR ROW DELETED_________" + str(count)
                 print" ______"
-                #del row[:]
 
             # Fjerner komma i prekentekst som "fucker opp" listen
             if len(row) > 14: #and "." in row[2]:
@@ -76,9 +75,8 @@ def parseCsv(FILE, MONTH, STDTID):
                     if r[1].isdigit() != True:
                         r[1] = '""'
 
-
+    #### TODO: FJERNE DETTE???
     for i, val in enumerate(rows):
-
         # Fikser lese error. Hvis noe info mangler
         if len(rows[i]) > 6:
 
@@ -88,7 +86,6 @@ def parseCsv(FILE, MONTH, STDTID):
                 #Nøtterøy
                 getData(i, 3, rows, hendelser, MONTH)
                    
-
                 #Teie
                 getData(i, 4, rows, hendelser, MONTH)
                 #Torød
@@ -246,12 +243,12 @@ def tidspunktParse (tekst):
     # Sjekker om hendelsen har et annet tidspunkt en standard
     retur = []
     #hvis tekst starter med tidspunkt
-    #eksempel: 12. blablabla
+    #eksempel: "12. blablabla"
     if tekst[:2].isdigit():
         tid = tekst[:2]
         
         #Hvis tekst har spesifik tid
-        #Eksempel: 12:30 blabla bla
+        #Eksempel: "12:30 blabla bla"
         if tekst[3:5].isdigit() and tekst[2] != '-':
             tid = tid + ':' + tekst[3:5]
             
