@@ -69,7 +69,23 @@ def main(argv):
         print "Month = ", MONTH
 
         hendelser = CSVscraper.parseCsv(FILE, MONTH, STDTID)
+        #check errors
+        errorCheck(hendelser)
 
+        logIn()
+        
+        enterLink()
+        
+        # Fill forms
+        fillForm(br.form, hendelser)
+
+        print "ALL ADDED EVENTS:"
+        for i in range(len(name)):
+                print name[i]
+                print date[i]
+                    
+        return 0
+def errorCheck(hendelser):
         #be bruker om å se etter errors
         for h in hendelser:
                 for g in h:
@@ -87,21 +103,57 @@ def main(argv):
         if key == "y":
                 f = open("temp.txt", "w")
                 for e in hendelser:
+                        f.write("--\n")
                         for g in e:
+                                f.write("__"+"\n")
+                                f.write(g["dato"]+"\n")
+                                f.write(g["tittel"]+"\n")
                                 f.write(g["tekst"]+"\n")
+                                f.write(g["type"]+"\n")
+                                f.write(g["tid1"]+"\n")
+                                f.write(g["tid2"]+"\n")
                 f.close()
                 key = raw_input("\nMAKE CHANGES IN 'tempt.txt' and press enter when complete")
                 
-                f = open("temp.txt", "r")
+                hendelserChecked = []
+                #åpne filen
+                #f = open("temp.txt", "r")
+                with open("temp.txt") as f:
+                        lines = f.readlines()
 
+                type = []
+                for i, line in enumerate(lines):
+                        if line == "--\n":
+                                if len(type) > 0:
+                                        hendelserChecked.append(type)
+                        if line == "__\n":
+                                h = {
+                                        "dato":lines[i+1].rstrip("\n"),
+                                        "tittel":lines[i+2].rstrip("\n"),
+                                        "tekst":lines[i+3].rstrip("\n"),
+                                        "type":lines[i+4].rstrip("\n"),
+                                        "tid1":lines[i+5].rstrip("\n"),
+                                        "tid2":lines[i+6].rstrip("\n"),
+
+                                        }
+                                
+
+                                #h["dato"] = f[i+1]
+
+                                type.append(h)
+
+
+                '''
                 for h in hendelser:
                         for g in h:
                                 l = f.readline()
-                                g["tekst"] = l.rstrip("\n")
+                                     g["tekst"] = l.rstrip("\n")
+                '''
                 f.close()
                 os.remove("temp.txt")
-                #be bruker om å se etter errors
-                for h in hendelser:
+                #be bruker om å se etter erroris
+                print "\n\n\n----------------------------------------"
+                for h in hendelserChecked:
                         for g in h:
                                 print ""
                                 print g["dato"]
@@ -109,24 +161,10 @@ def main(argv):
                                 print g["tekst"]
                                 print g["type"]
                                 print g["tid1"]
+                                print g["tid2"]
                         
                 key = raw_input ("\nCHECK FOR ERRORS 1 LAST TIME. Press 'ENTER' when rdy ")
 
-
-
-        logIn()
-        
-        enterLink()
-        
-        # Fill forms
-        fillForm(br.form, hendelser)
-
-        print "ALL ADDED EVENTS:"
-        for i in range(len(name)):
-                print name[i]
-                print date[i]
-                    
-        return 0
 def logIn ():
         print "Logging inn.. (if this fails you have wrong LOGIN details\n"
         # Print all forms on page
